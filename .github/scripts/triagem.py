@@ -73,9 +73,20 @@ def api_paginado(rota, teto=30):
 
 
 def baixar(repo_head, sha, caminho):
-    url = f"https://raw.githubusercontent.com/{repo_head}/{sha}/{caminho}"
+    """
+    Lê um arquivo da entrega pela API de conteúdo, que respeita o token.
+
+    O fork de um candidato é público e o `raw.githubusercontent` anônimo daria conta, mas ele
+    devolve 404 em repositório privado. Isso fazia a triagem recusar com "não consegui ler o
+    info.json" quando rodava contra a cópia privada do desafio usada na validação da esteira.
+    """
+    url = f"https://api.github.com/repos/{repo_head}/contents/{caminho}?ref={sha}"
+    req = urllib.request.Request(url, headers={"Accept": "application/vnd.github.raw"})
+    token = os.environ.get("GITHUB_TOKEN")
+    if token:
+        req.add_header("Authorization", f"Bearer {token}")
     try:
-        with urllib.request.urlopen(url, timeout=60) as r:
+        with urllib.request.urlopen(req, timeout=60) as r:
             return r.read().decode("utf-8", "replace")
     except urllib.error.HTTPError:
         return None
