@@ -1,0 +1,40 @@
+# Exemplo de docker-compose de entrega.
+#
+# Diferença para o de desenvolvimento: aqui a API e a interface web usam `image:` apontando
+# para imagens públicas no Docker Hub. `build:` não é aceito, porque a avaliação não compila
+# o seu código.
+#
+# As imagens abaixo empacotam o código base sem nenhuma correção. Servem para você ver o
+# formato e rodar o verificar.sh contra elas. Não são uma entrega válida.
+
+services:
+  api:
+    image: robsoncalixto/desafio-4tech-api:base
+    ports:
+      - "9999:8080"
+    environment:
+      ConnectionStrings__Postgres: "Host=postgres;Port=5432;Database=desafio;Username=desafio;Password=desafio"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  web:
+    image: robsoncalixto/desafio-4tech-web:base
+    ports:
+      - "4200:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: desafio
+      POSTGRES_USER: desafio
+      POSTGRES_PASSWORD: desafio
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U desafio -d desafio"]
+      interval: 3s
+      timeout: 3s
+      retries: 15

@@ -1,0 +1,12 @@
+{
+  "identificador": "exemplo",
+  "nome": "Codigo base empacotado",
+  "email": "maria.souza@exemplo.com",
+  "imagem_api": "robsoncalixto/desafio-4tech-api:base",
+  "imagem_web": "robsoncalixto/desafio-4tech-web:base",
+  "stack": [
+    "dotnet-10",
+    "postgres-17",
+    "angular-20"
+  ]
+}

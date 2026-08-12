@@ -1,0 +1,31 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+[Dd]ebug/
+[Rr]elease/
+artifacts/
+TestResults/
+*.trx
+*.coverage
+*.nupkg
+
+# Ambiente
+.env
+.env.local
+*.pfx
+
+# Editores
+.vs/
+.vscode/
+.idea/
+*.swp
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+.claude/
+# Artefatos de ferramenta local
+.playwright-mcp/

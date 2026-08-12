@@ -1,0 +1,31 @@
+<section class="cartao">
+  <header class="cabecalho">
+    <h2>Planos</h2>
+    <button type="button" (click)="carregar()" [disabled]="carregando()">Recarregar</button>
+  </header>
+
+  @if (carregando()) {
+    <p class="aviso">Carregando planos...</p>
+  } @else if (erro()) {
+    <p class="aviso erro">{{ erro() }}</p>
+  } @else if (planos().length === 0) {
+    <p class="aviso">Nenhum plano cadastrado.</p>
+  } @else {
+    <table>
+      <thead>
+        <tr>
+          <th>Nome</th>
+          <th>Código ANS</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (plano of planos(); track plano.id) {
+          <tr>
+            <td>{{ plano.nome }}</td>
+            <td>{{ plano.codigo_registro_ans }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</section>

@@ -1,0 +1,60 @@
+name: Dúvida sobre o enunciado
+description: Algo na SPEC.md ou no README.md que está ambíguo, contraditório ou que você não entendeu
+title: "Dúvida: "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Dúvidas sobre o enunciado são respondidas publicamente e valem para todos os
+        candidatos.
+
+        Duas coisas que não são respondidas aqui: **como implementar** e **se a sua solução
+        está certa**. Se a especificação não define o comportamento de um ponto, isso é
+        proposital: decida, siga em frente e registre a decisão no README da sua entrega.
+
+  - type: input
+    id: identificador
+    attributes:
+      label: Seu identificador
+      description: O mesmo que a 4Tech enviou no convite
+      placeholder: maria-souza
+    validations:
+      required: true
+
+  - type: dropdown
+    id: onde
+    attributes:
+      label: Onde está o ponto
+      options:
+        - SPEC.md, contrato HTTP (seções 1 a 3)
+        - SPEC.md, regras de negócio e erros (seções 4 a 8)
+        - SPEC.md, interface web (seção 9)
+        - README.md, regras de entrega
+        - Código base, backend
+        - Código base, frontend
+        - Outro
+    validations:
+      required: true
+
+  - type: textarea
+    id: duvida
+    attributes:
+      label: A dúvida
+      description: >
+        Cite o trecho e diga o que ficou ambíguo. Quanto mais específico, mais útil a
+        resposta é para todo mundo.
+      placeholder: |
+        A seção 2.3 diz X, mas a tabela logo acima lista Y. Qual dos dois vale?
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: confirmacao
+    attributes:
+      label: Antes de enviar
+      options:
+        - label: Li a `SPEC.md` e o `README.md` inteiros e a resposta não está lá
+          required: true
+        - label: Não estou perguntando como implementar nem pedindo revisão da minha solução
+          required: true

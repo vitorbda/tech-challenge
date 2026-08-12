@@ -1,0 +1,92 @@
+name: Triagem da entrega
+
+# Etapa 0: confere apenas o FORMATO da entrega e comenta no PR.
+#
+# Roda com `pull_request_target` porque precisa de permissão para comentar e rotular, o que
+# `pull_request` vindo de fork não tem. Isso exige uma regra que não pode ser quebrada:
+#
+#   NADA VINDO DO PULL REQUEST É EXECUTADO AQUI.
+#
+# A entrega vem de um fork e traz o código do candidato junto, então o PR inteiro é código
+# não confiável. O checkout é da branch base (código nosso, revisado), e é dela que sai o
+# `triagem.py` que roda: a versão que o candidato eventualmente tenha alterado no fork nunca
+# é executada. Os três arquivos da pasta do participante são baixados pela API e tratados
+# como dado, lidos e nunca rodados. Nenhum `docker compose up`, nenhum build, nenhum script
+# do candidato. Subir a aplicação da entrega é executar código arbitrário, e isso acontece em
+# outro lugar, em runner isolado e sem secrets.
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+    paths:
+      - 'participantes/**'
+      - 'base/**'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: triagem-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  triagem:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout da branch base
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.base_ref }}
+          persist-credentials: false
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Conferir a estrutura da entrega
+        id: triagem
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: |
+          set +e
+          python3 .github/scripts/triagem.py --pr "${{ github.event.pull_request.number }}"
+          echo "ok=$([ $? -eq 0 ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+
+      - name: Comentar no PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          anterior=$(gh api "repos/${{ github.repository }}/issues/$PR/comments" \
+            --jq '[.[] | select(.body | startswith("<!-- triagem-4tech -->"))] | last | .id // empty')
+
+          if [ -n "$anterior" ]; then
+            gh api -X PATCH "repos/${{ github.repository }}/issues/comments/$anterior" \
+              -F body=@comentario.md >/dev/null
+          else
+            gh api -X POST "repos/${{ github.repository }}/issues/$PR/comments" \
+              -F body=@comentario.md >/dev/null
+          fi
+
+      - name: Rotular o PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+          OK: ${{ steps.triagem.outputs.ok }}
+        run: |
+          if [ "$OK" = "true" ]; then
+            manter="entrega-recebida"; remover="entrega-invalida"
+          else
+            manter="entrega-invalida"; remover="entrega-recebida"
+          fi
+
+          gh api -X DELETE "repos/${{ github.repository }}/issues/$PR/labels/$remover" \
+            >/dev/null 2>&1 || true
+          gh api -X POST "repos/${{ github.repository }}/issues/$PR/labels" \
+            -f "labels[]=$manter" >/dev/null 2>&1 || true
+
+      - name: Falhar se a estrutura estiver inválida
+        if: steps.triagem.outputs.ok != 'true'
+        run: exit 1
