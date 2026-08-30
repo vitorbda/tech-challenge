@@ -35,7 +35,9 @@ public class BeneficiariosController : ControllerBase
                 return Ok(beneficiario);
             }
 
-            return BadRequest("CPF ja cadastrado");
+            throw new ConflitoException(
+                "Já existe beneficiário cadastrado com esse CPF",
+                [new DetalheErro("cpf", "duplicado")]);
         }
 
         throw new ValidacaoException("CPF inválido", [new DetalheErro("cpf", "formato_invalido")]);
