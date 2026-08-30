@@ -226,6 +226,34 @@ public class BeneficiariosTests(ApiFixture fixture) : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Listar_deve_manter_estabilidade_percorrendo_todas_as_paginas()
+    {
+        var semeados = await fixture.SemearBeneficiariosAsync(25);
+        var idsEsperados = semeados.Select(b => b.Id).ToHashSet();
+
+        var idsObtidos = new List<Guid>();
+        var pagina = 1;
+
+        while (true)
+        {
+            var corpo = await (await Client.GetAsync($"/beneficiarios?pagina={pagina}&tamanho=10")).CorpoAsync();
+            var dados = corpo.GetProperty("dados");
+
+            if (dados.GetArrayLength() == 0)
+            {
+                break;
+            }
+
+            idsObtidos.AddRange(dados.EnumerateArray().Select(b => b.GetProperty("id").GetGuid()));
+            pagina++;
+        }
+
+        Assert.Equal(idsEsperados.Count, idsObtidos.Count);
+        Assert.Equal(idsEsperados.Count, idsObtidos.Distinct().Count());
+        Assert.Equal(idsEsperados, idsObtidos.ToHashSet());
+    }
+
+    [Fact]
     public async Task Atualizar_dados_cadastrais_de_beneficiario_inativo_deve_devolver_409()
     {
         var beneficiario = (await fixture.SemearBeneficiariosAsync(
