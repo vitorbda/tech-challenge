@@ -38,7 +38,7 @@ public class BeneficiariosController : ControllerBase
             return BadRequest("CPF ja cadastrado");
         }
 
-        return BadRequest("CPF invalido");
+        throw new ValidacaoException("CPF inválido", [new DetalheErro("cpf", "formato_invalido")]);
     }
 
     [HttpGet]
