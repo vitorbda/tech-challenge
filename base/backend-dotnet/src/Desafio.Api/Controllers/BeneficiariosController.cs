@@ -31,4 +31,14 @@ public class BeneficiariosController(BeneficiarioServico servico) : ControllerBa
 
         return Ok(dados.Select(BeneficiarioResponse.De));
     }
+
+    [HttpGet("{id:guid}")]
+    [ProducesResponseType<BeneficiarioResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ErroResponse>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Obter(Guid id, CancellationToken cancellationToken)
+    {
+        var beneficiario = await servico.ObterAsync(id, cancellationToken);
+
+        return Ok(BeneficiarioResponse.De(beneficiario));
+    }
 }
