@@ -1,3 +1,4 @@
+using Desafio.Api.Api.Contratos;
 using Desafio.Api.Dominio;
 using Desafio.Api.Infraestrutura;
 using Microsoft.AspNetCore.Mvc;
@@ -18,17 +19,30 @@ public class BeneficiariosController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Criar([FromBody] Beneficiario beneficiario, CancellationToken cancellationToken)
+    public async Task<IActionResult> Criar([FromBody] BeneficiarioRequest requisicao, CancellationToken cancellationToken)
     {
-        if (beneficiario.Cpf.Length == 11)
+        var cpf = requisicao.Cpf ?? string.Empty;
+
+        if (cpf.Length == 11)
         {
             // Mesmo modelo do PlanoServico: a garantia de unicidade é o índice único da
             // tabela, e esta consulta prévia existe só para recusar o pedido antes de ele
             // chegar no banco.
-            var existe = await _db.Beneficiarios.AnyAsync(b => b.Cpf == beneficiario.Cpf, cancellationToken);
+            var existe = await _db.Beneficiarios.AnyAsync(b => b.Cpf == cpf, cancellationToken);
 
             if (!existe)
             {
+                var beneficiario = new Beneficiario
+                {
+                    Id = Guid.NewGuid(),
+                    NomeCompleto = requisicao.NomeCompleto!,
+                    Cpf = cpf,
+                    DataNascimento = requisicao.DataNascimento ?? default,
+                    PlanoId = requisicao.PlanoId ?? Guid.Empty,
+                    Status = StatusBeneficiario.ATIVO,
+                    DataCadastro = DateTime.UtcNow
+                };
+
                 _db.Beneficiarios.Add(beneficiario);
                 await _db.SaveChangesAsync(cancellationToken);
 
