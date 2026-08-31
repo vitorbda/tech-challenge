@@ -54,6 +54,29 @@ public class BeneficiariosTests(ApiFixture fixture) : IAsyncLifetime
         Assert.Equal(HttpStatusCode.UnprocessableEntity, resposta.StatusCode);
     }
 
+    [Fact]
+    public async Task Criar_ignora_id_status_e_data_cadastro_enviados_no_corpo()
+    {
+        var idForcado = Guid.NewGuid();
+
+        var resposta = await Client.PostAsync("/beneficiarios", Http.Json(new
+        {
+            Id = idForcado,
+            NomeCompleto = "Maria Aparecida da Silva",
+            Cpf = "52998224725",
+            DataNascimento = "1990-05-12",
+            PlanoId = Planos.Bronze,
+            Status = "INATIVO",
+            DataCadastro = "1900-01-01T00:00:00Z"
+        }));
+
+        var corpo = await resposta.CorpoAsync();
+
+        Assert.NotEqual(idForcado, corpo.GetProperty("id").GetGuid());
+        Assert.Equal("ATIVO", corpo.GetProperty("status").GetString());
+        Assert.True(corpo.GetProperty("data_cadastro").GetDateTime() > new DateTime(2000, 1, 1));
+    }
+
     // ------------------------------------------------------------------ consulta por id
 
     [Fact]
