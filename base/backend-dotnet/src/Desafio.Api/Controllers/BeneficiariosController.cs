@@ -25,11 +25,20 @@ public class BeneficiariosController(BeneficiarioServico servico) : ControllerBa
     }
 
     [HttpGet]
-    public async Task<IActionResult> Listar(CancellationToken cancellationToken)
+    [ProducesResponseType<PaginaResponse<BeneficiarioResponse>>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ErroResponse>(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> Listar(
+        [FromQuery(Name = "pagina")] string? pagina,
+        [FromQuery(Name = "tamanho")] string? tamanho,
+        [FromQuery(Name = "status")] string? status,
+        [FromQuery(Name = "plano_id")] string? planoId,
+        CancellationToken cancellationToken)
     {
-        var (dados, _) = await servico.ListarAsync(cancellationToken);
+        var (dados, paginaEfetiva, tamanhoEfetivo, total) =
+            await servico.ListarAsync(pagina, tamanho, status, planoId, cancellationToken);
 
-        return Ok(dados.Select(BeneficiarioResponse.De));
+        return Ok(new PaginaResponse<BeneficiarioResponse>(
+            dados.Select(BeneficiarioResponse.De).ToList(), paginaEfetiva, tamanhoEfetivo, total));
     }
 
     [HttpGet("{id:guid}")]
