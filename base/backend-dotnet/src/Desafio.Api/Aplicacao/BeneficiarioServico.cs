@@ -44,6 +44,13 @@ public class BeneficiarioServico(AppDbContext db)
         var beneficiario = await ObterAsync(id, cancellationToken);
 
         await GarantirPlanoExisteAsync(dados.PlanoId ?? beneficiario.PlanoId, cancellationToken);
+
+        if (beneficiario.Status == StatusBeneficiario.INATIVO && dados.Status != StatusBeneficiario.ATIVO)
+        {
+            throw new ConflitoException(
+                "Beneficiário inativo é um registro congelado; reative-o para alterar dados cadastrais");
+        }
+
         beneficiario.AtualizarDados(dados.NomeCompleto, dados.DataNascimento, dados.PlanoId, dados.Status);
         await SalvarAsync(cancellationToken);
 
