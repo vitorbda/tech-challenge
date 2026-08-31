@@ -45,6 +45,20 @@ public class BeneficiariosTests(ApiFixture fixture) : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Criar_com_cpf_igual_em_requisicoes_simultaneas_deve_aceitar_so_uma()
+    {
+        const string cpf = "87748248800";
+        const int quantidade = 10;
+
+        var respostas = await Task.WhenAll(
+            Enumerable.Range(0, quantidade).Select(_ => Client.PostAsync("/beneficiarios", Http.Json(CorpoDeCriacao(cpf)))));
+
+        Assert.Single(respostas, r => r.IsSuccessStatusCode);
+        Assert.Equal(quantidade - 1, respostas.Count(r => r.StatusCode == HttpStatusCode.Conflict));
+        Assert.DoesNotContain(respostas, r => (int)r.StatusCode >= 500);
+    }
+
+    [Fact]
     public async Task Criar_com_plano_inexistente_deve_devolver_422()
     {
         var resposta = await Client.PostAsync(
