@@ -32,6 +32,7 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
                 .WithMany()
                 .HasForeignKey(b => b.PlanoId)
                 .OnDelete(DeleteBehavior.Restrict);
+            entidade.HasQueryFilter(b => b.ExcluidoEm == null);
         });
     }
 }
