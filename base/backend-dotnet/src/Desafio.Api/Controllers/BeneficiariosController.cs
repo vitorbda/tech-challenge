@@ -23,47 +23,50 @@ public class BeneficiariosController : ControllerBase
     {
         var cpf = requisicao.Cpf ?? string.Empty;
 
-        if (cpf.Length == 11)
+        if (cpf.Length != 11)
         {
-        var planoId = requisicao.PlanoId ?? Guid.Empty;
-        var planoExiste = await _db.Planos.AnyAsync(p => p.Id == planoId, cancellationToken);
-
-        if (!planoExiste)
-        {
-            throw new NaoProcessavelException(
-                "Plano informado não existe",
-                [new DetalheErro("plano_id", "nao_encontrado")]);
+            throw new ValidacaoException("CPF inválido", [new DetalheErro("cpf", "formato_invalido")]);
         }
-            // Mesmo modelo do PlanoServico: a garantia de unicidade é o índice único da
-            // tabela, e esta consulta prévia existe só para recusar o pedido antes de ele
-            // chegar no banco.
-            var existe = await _db.Beneficiarios.AnyAsync(b => b.Cpf == cpf, cancellationToken);
 
-            if (!existe)
+        // Sem IgnoreQueryFilters(): o HasQueryFilter(ExcluidoEm == null) do AppDbContext já
+        // faz plano excluído logicamente contar como inexistente aqui.
+            var planoId = requisicao.PlanoId ?? Guid.Empty;
+            var planoExiste = await _db.Planos.AnyAsync(p => p.Id == planoId, cancellationToken);
+
+            if (!planoExiste)
             {
-                var beneficiario = new Beneficiario
-                {
-                    Id = Guid.NewGuid(),
-                    NomeCompleto = requisicao.NomeCompleto!,
-                    Cpf = cpf,
-                    DataNascimento = requisicao.DataNascimento ?? default,
-                    PlanoId = requisicao.PlanoId ?? Guid.Empty,
-                    Status = StatusBeneficiario.ATIVO,
-                    DataCadastro = DateTime.UtcNow
-                };
-
-                _db.Beneficiarios.Add(beneficiario);
-                await _db.SaveChangesAsync(cancellationToken);
-
-                return Ok(beneficiario);
+                throw new NaoProcessavelException(
+                    "Plano informado não existe",
+                    [new DetalheErro("plano_id", "nao_encontrado")]);
             }
 
+        // Mesmo modelo do PlanoServico: a garantia de unicidade é o índice único da
+        // tabela, e esta consulta prévia existe só para recusar o pedido antes de ele
+        // chegar no banco.
+        var cpfEmUso = await _db.Beneficiarios.AnyAsync(b => b.Cpf == cpf, cancellationToken);
+
+        if (cpfEmUso)
+        {
             throw new ConflitoException(
                 "Já existe beneficiário cadastrado com esse CPF",
                 [new DetalheErro("cpf", "duplicado")]);
         }
 
-        throw new ValidacaoException("CPF inválido", [new DetalheErro("cpf", "formato_invalido")]);
+        var beneficiario = new Beneficiario
+        {
+            Id = Guid.NewGuid(),
+            NomeCompleto = requisicao.NomeCompleto!,
+            Cpf = cpf,
+            DataNascimento = requisicao.DataNascimento ?? default,
+            PlanoId = planoId,
+            Status = StatusBeneficiario.ATIVO,
+            DataCadastro = DateTime.UtcNow
+        };
+
+        _db.Beneficiarios.Add(beneficiario);
+        await _db.SaveChangesAsync(cancellationToken);
+
+        return Ok(beneficiario);
     }
 
     [HttpGet]
