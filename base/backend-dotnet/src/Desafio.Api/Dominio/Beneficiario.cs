@@ -111,10 +111,37 @@ public partial class Beneficiario
 
     private static void ValidarCpf(string cpf, List<DetalheErro> detalhes)
     {
-        if (!FormatoDoCpf().IsMatch(cpf))
+        if (!FormatoDoCpf().IsMatch(cpf) || CpfInvalido(cpf))
         {
             detalhes.Add(new DetalheErro("cpf", "formato_invalido"));
         }
+    }
+
+    private static bool CpfInvalido(string cpf)
+    {
+        if (cpf.Distinct().Count() == 1)
+        {
+            return true;
+        }
+
+        var digitos = cpf.Select(c => c - '0').ToList();
+
+        return digitos[9] != CalcularDigitoVerificador(digitos, 10) ||
+               digitos[10] != CalcularDigitoVerificador(digitos, 11);
+    }
+
+    private static int CalcularDigitoVerificador(IReadOnlyList<int> digitos, int pesoInicial)
+    {
+        var soma = 0;
+
+        for (var i = 0; i < pesoInicial - 1; i++)
+        {
+            soma += digitos[i] * (pesoInicial - i);
+        }
+
+        var resto = soma * 10 % 11;
+
+        return resto == 10 ? 0 : resto;
     }
 
     [GeneratedRegex("^[0-9]{11}$")]
