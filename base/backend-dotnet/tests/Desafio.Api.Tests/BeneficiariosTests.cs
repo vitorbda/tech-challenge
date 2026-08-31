@@ -213,6 +213,26 @@ public class BeneficiariosTests(ApiFixture fixture) : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Atualizar_ignora_cpf_enviado_no_corpo()
+    {
+        var beneficiario = (await fixture.SemearBeneficiariosAsync(1)).Single();
+
+        var resposta = await Client.PutAsync($"/beneficiarios/{beneficiario.Id}", Http.Json(new
+        {
+            NomeCompleto = "Joana Ribeiro Nunes",
+            Cpf = "16899535009",
+            DataNascimento = "1985-03-20",
+            PlanoId = Planos.Ouro,
+            Status = "ATIVO"
+        }));
+
+        Assert.Equal(HttpStatusCode.OK, resposta.StatusCode);
+
+        var corpo = await resposta.CorpoAsync();
+        Assert.Equal(beneficiario.Cpf, corpo.GetProperty("cpf").GetString());
+    }
+
+    [Fact]
     public async Task Atualizar_inexistente_deve_devolver_404()
     {
         var resposta = await Client.PutAsync($"/beneficiarios/{Guid.NewGuid()}", Http.Json(new
