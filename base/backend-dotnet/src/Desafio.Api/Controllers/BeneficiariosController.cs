@@ -58,4 +58,14 @@ public class BeneficiariosController(BeneficiarioServico servico) : ControllerBa
 
         return Ok(BeneficiarioResponse.De(beneficiario));
     }
+
+    [HttpDelete("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType<ErroResponse>(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> Excluir(Guid id, CancellationToken cancellationToken)
+    {
+        await servico.ExcluirAsync(id, cancellationToken);
+
+        return NoContent();
+    }
 }
