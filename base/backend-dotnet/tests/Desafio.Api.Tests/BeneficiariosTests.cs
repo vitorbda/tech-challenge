@@ -10,7 +10,7 @@ public class BeneficiariosTests(ApiFixture fixture) : IAsyncLifetime
 
     public Task DisposeAsync() => Task.CompletedTask;
 
-    private static object CorpoDeCriacao(string cpf, Guid? planoId = null) => new
+    private static object CorpoDeCriacao(string? cpf, Guid? planoId = null) => new
     {
         NomeCompleto = "Maria Aparecida da Silva",
         Cpf = cpf,
@@ -64,6 +64,44 @@ public class BeneficiariosTests(ApiFixture fixture) : IAsyncLifetime
             Http.Json(CorpoDeCriacao("16899535009", Planos.Bronze)));
 
         Assert.Equal(HttpStatusCode.UnprocessableEntity, resposta.StatusCode);
+    }
+
+    [Theory]
+    [InlineData("52998224725")]
+    [InlineData("71428793860")]
+    [InlineData("39053344705")]
+    [InlineData("16899535009")]
+    [InlineData("87748248800")]
+    [InlineData("11144477735")]
+    public async Task Criar_com_cpf_valido_nao_deve_devolver_400(string cpf)
+    {
+        var resposta = await Client.PostAsync("/beneficiarios", Http.Json(CorpoDeCriacao(cpf)));
+
+        Assert.True(resposta.IsSuccessStatusCode);
+    }
+
+    [Theory]
+    [InlineData("12345678900")] // dígito verificador inválido
+    [InlineData("11111111111")] // sequência repetida (DV até fecharia)
+    [InlineData("00000000000")] // sequência repetida
+    [InlineData("abcdefghijk")] // não numérico
+    [InlineData("529.982.247-25")] // com pontuação, SPEC exige sem máscara
+    [InlineData("5299822472")] // 10 dígitos
+    [InlineData(null)] // ausente
+    [InlineData("")] // vazio
+    public async Task Criar_com_cpf_invalido_deve_devolver_400(string? cpf)
+    {
+        var resposta = await Client.PostAsync("/beneficiarios", Http.Json(CorpoDeCriacao(cpf)));
+
+        Assert.Equal(HttpStatusCode.BadRequest, resposta.StatusCode);
+
+        var corpo = await resposta.CorpoAsync();
+        var campos = corpo.GetProperty("detalhes")
+            .EnumerateArray()
+            .Select(detalhe => detalhe.GetProperty("campo").GetString())
+            .ToList();
+
+        Assert.Contains("cpf", campos);
     }
 
     [Fact]
