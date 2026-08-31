@@ -18,19 +18,19 @@ public class BeneficiariosController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Criar([FromBody] Beneficiario beneficiario)
+    public async Task<IActionResult> Criar([FromBody] Beneficiario beneficiario, CancellationToken cancellationToken)
     {
         if (beneficiario.Cpf.Length == 11)
         {
             // Mesmo modelo do PlanoServico: a garantia de unicidade é o índice único da
             // tabela, e esta consulta prévia existe só para recusar o pedido antes de ele
             // chegar no banco.
-            var existe = _db.Beneficiarios.Any(b => b.Cpf == beneficiario.Cpf);
+            var existe = await _db.Beneficiarios.AnyAsync(b => b.Cpf == beneficiario.Cpf, cancellationToken);
 
             if (!existe)
             {
                 _db.Beneficiarios.Add(beneficiario);
-                await _db.SaveChangesAsync();
+                await _db.SaveChangesAsync(cancellationToken);
 
                 return Ok(beneficiario);
             }
@@ -44,16 +44,16 @@ public class BeneficiariosController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> Listar()
+    public async Task<IActionResult> Listar(CancellationToken cancellationToken)
     {
-        var lista = await _db.Beneficiarios.ToListAsync();
+        var lista = await _db.Beneficiarios.ToListAsync(cancellationToken);
 
         // O plano é resolvido aqui, e não na consulta principal, porque o FindAsync usa o
         // cache do contexto: a listagem continua fazendo uma única ida ao banco, qualquer
         // que seja o tamanho da página.
         foreach (var b in lista)
         {
-            b.Plano = await _db.Planos.FindAsync(b.PlanoId);
+            b.Plano = await _db.Planos.FindAsync([b.PlanoId], cancellationToken);
         }
 
         return Ok(lista);
