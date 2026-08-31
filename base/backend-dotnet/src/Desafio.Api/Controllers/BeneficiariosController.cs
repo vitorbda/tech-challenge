@@ -10,7 +10,7 @@ namespace Desafio.Api.Controllers;
 public class BeneficiariosController(BeneficiarioServico servico) : ControllerBase
 {
     [HttpPost]
-    [ProducesResponseType<BeneficiarioResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<BeneficiarioResponse>(StatusCodes.Status201Created)]
     [ProducesResponseType<ErroResponse>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ErroResponse>(StatusCodes.Status409Conflict)]
     [ProducesResponseType<ErroResponse>(StatusCodes.Status422UnprocessableEntity)]
@@ -21,7 +21,7 @@ public class BeneficiariosController(BeneficiarioServico servico) : ControllerBa
 
         var beneficiario = await servico.CriarAsync(dados, cancellationToken);
 
-        return Ok(BeneficiarioResponse.De(beneficiario));
+        return CreatedAtAction(nameof(Obter), new { id = beneficiario.Id }, BeneficiarioResponse.De(beneficiario));
     }
 
     [HttpGet]
