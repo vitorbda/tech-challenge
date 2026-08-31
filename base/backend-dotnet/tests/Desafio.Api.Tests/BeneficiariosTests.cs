@@ -67,6 +67,30 @@ public class BeneficiariosTests(ApiFixture fixture) : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Criar_com_dados_invalidos_deve_devolver_400_detalhando_os_campos()
+    {
+        var resposta = await Client.PostAsync("/beneficiarios", Http.Json(new
+        {
+            NomeCompleto = "ab",
+            Cpf = "123",
+            DataNascimento = DateOnly.FromDateTime(DateTime.UtcNow).ToString("yyyy-MM-dd")
+        }));
+
+        Assert.Equal(HttpStatusCode.BadRequest, resposta.StatusCode);
+
+        var corpo = await resposta.CorpoAsync();
+        var campos = corpo.GetProperty("detalhes")
+            .EnumerateArray()
+            .Select(detalhe => detalhe.GetProperty("campo").GetString())
+            .ToList();
+
+        Assert.Contains("nome_completo", campos);
+        Assert.Contains("cpf", campos);
+        Assert.Contains("data_nascimento", campos);
+        Assert.Contains("plano_id", campos);
+    }
+
+    [Fact]
     public async Task Criar_ignora_id_status_e_data_cadastro_enviados_no_corpo()
     {
         var idForcado = Guid.NewGuid();
