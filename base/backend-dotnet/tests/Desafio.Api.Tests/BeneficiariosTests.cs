@@ -55,6 +55,18 @@ public class BeneficiariosTests(ApiFixture fixture) : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Criar_com_plano_excluido_logicamente_deve_devolver_422()
+    {
+        await Client.DeleteAsync($"/planos/{Planos.Bronze}");
+
+        var resposta = await Client.PostAsync(
+            "/beneficiarios",
+            Http.Json(CorpoDeCriacao("16899535009", Planos.Bronze)));
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, resposta.StatusCode);
+    }
+
+    [Fact]
     public async Task Criar_ignora_id_status_e_data_cadastro_enviados_no_corpo()
     {
         var idForcado = Guid.NewGuid();
