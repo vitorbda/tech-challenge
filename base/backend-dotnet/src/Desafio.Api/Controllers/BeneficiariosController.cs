@@ -25,6 +25,15 @@ public class BeneficiariosController : ControllerBase
 
         if (cpf.Length == 11)
         {
+        var planoId = requisicao.PlanoId ?? Guid.Empty;
+        var planoExiste = await _db.Planos.AnyAsync(p => p.Id == planoId, cancellationToken);
+
+        if (!planoExiste)
+        {
+            throw new NaoProcessavelException(
+                "Plano informado não existe",
+                [new DetalheErro("plano_id", "nao_encontrado")]);
+        }
             // Mesmo modelo do PlanoServico: a garantia de unicidade é o índice único da
             // tabela, e esta consulta prévia existe só para recusar o pedido antes de ele
             // chegar no banco.
