@@ -13,12 +13,10 @@ public class BeneficiarioServico(AppDbContext db)
     {
         var consulta = db.Beneficiarios.AsNoTracking();
 
-        var totalTask = consulta.CountAsync(cancellationToken);
-        var dadosTask = consulta.ToListAsync(cancellationToken);
+        var total = await consulta.CountAsync(cancellationToken);
+        var dados = await consulta.ToListAsync(cancellationToken);
 
-        await Task.WhenAll(totalTask, dadosTask);
-
-        return (dadosTask.Result, totalTask.Result);
+        return (dados, total);
     }
 
     public async Task<Beneficiario> ObterAsync(Guid id, CancellationToken cancellationToken)
