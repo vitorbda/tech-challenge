@@ -50,7 +50,7 @@ public class BeneficiariosController : ControllerBase
         _db.Beneficiarios.Add(beneficiario);
         await _db.SaveChangesAsync(cancellationToken);
 
-        return Ok(beneficiario);
+        return Ok(BeneficiarioResponse.De(beneficiario));
     }
 
     [HttpGet]
@@ -61,6 +61,6 @@ public class BeneficiariosController : ControllerBase
             .AsNoTracking()
             .ToListAsync(cancellationToken);
 
-        return Ok(lista);
+        return Ok(lista.Select(BeneficiarioResponse.De));
     }
 }
