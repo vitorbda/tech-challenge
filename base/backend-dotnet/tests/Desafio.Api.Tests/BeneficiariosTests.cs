@@ -452,6 +452,49 @@ public class BeneficiariosTests(ApiFixture fixture) : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Listar_filtra_somente_por_status()
+    {
+        await fixture.SemearBeneficiariosAsync(4, Planos.Bronze, "ATIVO", 100);
+        await fixture.SemearBeneficiariosAsync(6, Planos.Prata, "INATIVO", 200);
+
+        var corpo = await (await Client.GetAsync("/beneficiarios?tamanho=50&status=INATIVO")).CorpoAsync();
+
+        Assert.Equal(6, corpo.GetProperty("total").GetInt32());
+        Assert.All(
+            corpo.GetProperty("dados").EnumerateArray(),
+            beneficiario => Assert.Equal("INATIVO", beneficiario.GetProperty("status").GetString()));
+    }
+
+    [Fact]
+    public async Task Listar_filtra_somente_por_plano_id()
+    {
+        await fixture.SemearBeneficiariosAsync(4, Planos.Bronze, "ATIVO", 100);
+        await fixture.SemearBeneficiariosAsync(6, Planos.Prata, "ATIVO", 200);
+
+        var corpo = await (await Client.GetAsync($"/beneficiarios?tamanho=50&plano_id={Planos.Prata}")).CorpoAsync();
+
+        Assert.Equal(6, corpo.GetProperty("total").GetInt32());
+        Assert.All(
+            corpo.GetProperty("dados").EnumerateArray(),
+            beneficiario => Assert.Equal(Planos.Prata, beneficiario.GetProperty("plano_id").GetGuid()));
+    }
+
+    [Fact]
+    public async Task Listar_beneficiario_excluido_nao_aparece_na_listagem_nem_no_total()
+    {
+        var beneficiarios = await fixture.SemearBeneficiariosAsync(3);
+        var excluido = beneficiarios.First();
+
+        await Client.DeleteAsync($"/beneficiarios/{excluido.Id}");
+
+        var corpo = await (await Client.GetAsync("/beneficiarios?tamanho=50")).CorpoAsync();
+
+        Assert.Equal(2, corpo.GetProperty("total").GetInt32());
+        var ids = corpo.GetProperty("dados").EnumerateArray().Select(b => b.GetProperty("id").GetGuid());
+        Assert.DoesNotContain(excluido.Id, ids);
+    }
+
+    [Fact]
     public async Task Listar_sem_informar_tamanho_deve_devolver_10_itens_por_pagina()
     {
         await fixture.SemearBeneficiariosAsync(25);
