@@ -356,6 +356,33 @@ public class BeneficiariosTests(ApiFixture fixture) : IAsyncLifetime
             Assert.Equal(beneficiario.Cpf, atualizado.Cpf);
         });
     }
+
+    [Fact]
+    public async Task Atualizar_nao_altera_data_cadastro()
+    {
+        var beneficiario = (await fixture.SemearBeneficiariosAsync(1)).Single();
+
+        DateTime dataCadastroOriginal = default;
+        await fixture.UsarBancoAsync(async db =>
+        {
+            dataCadastroOriginal = (await db.Beneficiarios.SingleAsync(b => b.Id == beneficiario.Id)).DataCadastro;
+        });
+
+        var resposta = await Client.PutAsync($"/beneficiarios/{beneficiario.Id}", Http.Json(new
+        {
+            NomeCompleto = "Joana Ribeiro Nunes",
+            DataNascimento = "1985-03-20",
+            PlanoId = Planos.Ouro,
+            Status = "ATIVO"
+        }));
+
+        Assert.Equal(HttpStatusCode.OK, resposta.StatusCode);
+
+        await fixture.UsarBancoAsync(async db =>
+        {
+            var atualizado = await db.Beneficiarios.SingleAsync(b => b.Id == beneficiario.Id);
+            Assert.Equal(dataCadastroOriginal, atualizado.DataCadastro);
+        });
     }
 
     [Fact]
