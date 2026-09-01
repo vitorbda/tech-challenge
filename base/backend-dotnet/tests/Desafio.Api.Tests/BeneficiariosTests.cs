@@ -120,6 +120,103 @@ public class BeneficiariosTests(ApiFixture fixture) : IAsyncLifetime
         Assert.Contains("cpf", campos);
     }
 
+    [Theory]
+    [InlineData(null)] // ausente
+    [InlineData("ab")] // 2 caracteres, abaixo do mínimo
+    public async Task Criar_com_nome_completo_invalido_deve_devolver_400(string? nomeCompleto)
+    {
+        var resposta = await Client.PostAsync("/beneficiarios", Http.Json(new
+        {
+            NomeCompleto = nomeCompleto,
+            Cpf = "52998224725",
+            DataNascimento = "1990-05-12",
+            PlanoId = Planos.Bronze
+        }));
+
+        Assert.Equal(HttpStatusCode.BadRequest, resposta.StatusCode);
+
+        var corpo = await resposta.CorpoAsync();
+        var campos = corpo.GetProperty("detalhes")
+            .EnumerateArray()
+            .Select(detalhe => detalhe.GetProperty("campo").GetString())
+            .ToList();
+
+        Assert.Contains("nome_completo", campos);
+    }
+
+    [Fact]
+    public async Task Criar_com_nome_completo_muito_longo_deve_devolver_400()
+    {
+        var resposta = await Client.PostAsync("/beneficiarios", Http.Json(new
+        {
+            NomeCompleto = new string('a', 121),
+            Cpf = "52998224725",
+            DataNascimento = "1990-05-12",
+            PlanoId = Planos.Bronze
+        }));
+
+        Assert.Equal(HttpStatusCode.BadRequest, resposta.StatusCode);
+    }
+
+    [Fact]
+    public async Task Criar_com_data_nascimento_ausente_deve_devolver_400()
+    {
+        var resposta = await Client.PostAsync("/beneficiarios", Http.Json(new
+        {
+            NomeCompleto = "Maria Aparecida da Silva",
+            Cpf = "52998224725",
+            PlanoId = Planos.Bronze
+        }));
+
+        Assert.Equal(HttpStatusCode.BadRequest, resposta.StatusCode);
+
+        var corpo = await resposta.CorpoAsync();
+        var campos = corpo.GetProperty("detalhes")
+            .EnumerateArray()
+            .Select(detalhe => detalhe.GetProperty("campo").GetString())
+            .ToList();
+
+        Assert.Contains("data_nascimento", campos);
+    }
+
+    [Fact]
+    public async Task Criar_com_data_nascimento_futura_deve_devolver_400()
+    {
+        var amanha = DateOnly.FromDateTime(DateTime.UtcNow).AddDays(1).ToString("yyyy-MM-dd");
+
+        var resposta = await Client.PostAsync("/beneficiarios", Http.Json(new
+        {
+            NomeCompleto = "Maria Aparecida da Silva",
+            Cpf = "52998224725",
+            DataNascimento = amanha,
+            PlanoId = Planos.Bronze
+        }));
+
+        Assert.Equal(HttpStatusCode.BadRequest, resposta.StatusCode);
+
+        var corpo = await resposta.CorpoAsync();
+        var campos = corpo.GetProperty("detalhes")
+            .EnumerateArray()
+            .Select(detalhe => detalhe.GetProperty("campo").GetString())
+            .ToList();
+
+        Assert.Contains("data_nascimento", campos);
+    }
+
+    [Fact]
+    public async Task Criar_com_data_nascimento_em_formato_invalido_deve_devolver_400()
+    {
+        var resposta = await Client.PostAsync("/beneficiarios", Http.Json(new
+        {
+            NomeCompleto = "Maria Aparecida da Silva",
+            Cpf = "52998224725",
+            DataNascimento = "nao-e-uma-data",
+            PlanoId = Planos.Bronze
+        }));
+
+        Assert.Equal(HttpStatusCode.BadRequest, resposta.StatusCode);
+    }
+
     [Fact]
     public async Task Criar_com_dados_invalidos_deve_devolver_400_detalhando_os_campos()
     {
