@@ -356,6 +356,60 @@ public class BeneficiariosTests(ApiFixture fixture) : IAsyncLifetime
         Assert.Equal(25, corpo.GetProperty("total").GetInt32());
     }
 
+    [Theory]
+    [InlineData("pagina=0")]
+    [InlineData("pagina=-1")]
+    [InlineData("tamanho=0")]
+    [InlineData("tamanho=101")]
+    [InlineData("status=BANANA")]
+    [InlineData("plano_id=nao-e-guid")]
+    public async Task Listar_com_parametro_de_query_invalido_deve_devolver_400(string query)
+    {
+        var resposta = await Client.GetAsync($"/beneficiarios?{query}");
+
+        Assert.Equal(HttpStatusCode.BadRequest, resposta.StatusCode);
+    }
+
+    [Theory]
+    [InlineData("tamanho=1")]
+    [InlineData("tamanho=100")]
+    public async Task Listar_com_tamanho_no_limite_do_intervalo_deve_devolver_200(string query)
+    {
+        var resposta = await Client.GetAsync($"/beneficiarios?{query}");
+
+        Assert.Equal(HttpStatusCode.OK, resposta.StatusCode);
+    }
+
+    [Fact]
+    public async Task Listar_pagina_alem_do_total_deve_devolver_200_com_dados_vazio()
+    {
+        await fixture.SemearBeneficiariosAsync(3);
+
+        var corpo = await (await Client.GetAsync("/beneficiarios?pagina=99&tamanho=10")).CorpoAsync();
+
+        Assert.Equal(0, corpo.GetProperty("dados").GetArrayLength());
+        Assert.Equal(3, corpo.GetProperty("total").GetInt32());
+    }
+
+    [Fact]
+    public async Task Listar_sem_registros_deve_devolver_200_com_total_zero()
+    {
+        var corpo = await (await Client.GetAsync("/beneficiarios")).CorpoAsync();
+
+        Assert.Equal(0, corpo.GetProperty("dados").GetArrayLength());
+        Assert.Equal(0, corpo.GetProperty("total").GetInt32());
+    }
+
+    [Fact]
+    public async Task Listar_filtro_que_nao_casa_com_nada_deve_devolver_total_zero()
+    {
+        await fixture.SemearBeneficiariosAsync(3, Planos.Bronze, "ATIVO", 100);
+
+        var corpo = await (await Client.GetAsync("/beneficiarios?status=INATIVO")).CorpoAsync();
+
+        Assert.Equal(0, corpo.GetProperty("total").GetInt32());
+    }
+
     [Fact]
     public async Task Listar_deve_manter_estabilidade_percorrendo_todas_as_paginas()
     {
