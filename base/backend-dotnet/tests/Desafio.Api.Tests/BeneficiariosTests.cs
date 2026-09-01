@@ -87,6 +87,7 @@ public class BeneficiariosTests(ApiFixture fixture) : IAsyncLifetime
     [InlineData("16899535009")]
     [InlineData("87748248800")]
     [InlineData("11144477735")]
+    [InlineData("00000000191")]
     public async Task Criar_com_cpf_valido_nao_deve_devolver_400(string cpf)
     {
         var resposta = await Client.PostAsync("/beneficiarios", Http.Json(CorpoDeCriacao(cpf)));
@@ -101,6 +102,7 @@ public class BeneficiariosTests(ApiFixture fixture) : IAsyncLifetime
     [InlineData("abcdefghijk")] // não numérico
     [InlineData("529.982.247-25")] // com pontuação, SPEC exige sem máscara
     [InlineData("5299822472")] // 10 dígitos
+    [InlineData("529982247250")] // 12 dígitos
     [InlineData(null)] // ausente
     [InlineData("")] // vazio
     public async Task Criar_com_cpf_invalido_deve_devolver_400(string? cpf)
