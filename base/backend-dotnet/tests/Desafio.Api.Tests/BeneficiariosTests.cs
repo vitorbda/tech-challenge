@@ -349,6 +349,13 @@ public class BeneficiariosTests(ApiFixture fixture) : IAsyncLifetime
 
         var corpo = await resposta.CorpoAsync();
         Assert.Equal(beneficiario.Cpf, corpo.GetProperty("cpf").GetString());
+
+        await fixture.UsarBancoAsync(async db =>
+        {
+            var atualizado = await db.Beneficiarios.SingleAsync(b => b.Id == beneficiario.Id);
+            Assert.Equal(beneficiario.Cpf, atualizado.Cpf);
+        });
+    }
     }
 
     [Fact]
