@@ -1,4 +1,6 @@
 using System.Net;
+using Microsoft.EntityFrameworkCore;
+
 namespace Desafio.Api.Tests;
 
 [Collection(ColecaoDaApi.Nome)]
@@ -56,6 +58,12 @@ public class BeneficiariosTests(ApiFixture fixture) : IAsyncLifetime
         Assert.Single(respostas, r => r.IsSuccessStatusCode);
         Assert.Equal(quantidade - 1, respostas.Count(r => r.StatusCode == HttpStatusCode.Conflict));
         Assert.DoesNotContain(respostas, r => (int)r.StatusCode >= 500);
+
+        await fixture.UsarBancoAsync(async db =>
+        {
+            var quantidadeGravada = await db.Beneficiarios.CountAsync(b => b.Cpf == cpf);
+            Assert.Equal(1, quantidadeGravada);
+        });
     }
 
     [Fact]
