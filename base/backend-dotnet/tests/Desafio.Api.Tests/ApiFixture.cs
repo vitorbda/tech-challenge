@@ -30,6 +30,8 @@ public sealed class ApiFixture : IAsyncLifetime
 
     public HttpClient Client { get; private set; } = null!;
 
+    public string ConnectionString => _postgres.GetConnectionString();
+
     public async Task InitializeAsync()
     {
         await _postgres.StartAsync();
