@@ -1,4 +1,5 @@
 using System.Net;
+using Desafio.Api.Dominio;
 using Microsoft.EntityFrameworkCore;
 
 namespace Desafio.Api.Tests;
@@ -270,6 +271,17 @@ public class BeneficiariosTests(ApiFixture fixture) : IAsyncLifetime
         Assert.NotEqual(idForcado, corpo.GetProperty("id").GetGuid());
         Assert.Equal("ATIVO", corpo.GetProperty("status").GetString());
         Assert.True(corpo.GetProperty("data_cadastro").GetDateTime() > new DateTime(2000, 1, 1));
+
+        var idGravado = corpo.GetProperty("id").GetGuid();
+
+        await fixture.UsarBancoAsync(async db =>
+        {
+            var beneficiario = await db.Beneficiarios.SingleAsync(b => b.Id == idGravado);
+
+            Assert.NotEqual(idForcado, beneficiario.Id);
+            Assert.Equal(StatusBeneficiario.ATIVO, beneficiario.Status);
+            Assert.True(beneficiario.DataCadastro > new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+        });
     }
 
     // ------------------------------------------------------------------ consulta por id
