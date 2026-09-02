@@ -21,6 +21,7 @@ export class BeneficiariosLista {
   private readonly servico = inject(BeneficiarioServico);
   private readonly planoServico = inject(PlanoServico);
 
+  readonly novo = output<void>();
   readonly editar = output<Beneficiario>();
   readonly excluir = output<Beneficiario>();
 

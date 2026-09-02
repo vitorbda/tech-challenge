@@ -1,7 +1,10 @@
 <section class="cartao">
   <header class="cabecalho">
     <h2>Beneficiários</h2>
-    <button type="button" (click)="carregar()" [disabled]="carregando()">Recarregar</button>
+    <div class="acoes">
+      <button type="button" (click)="novo.emit()">Novo beneficiário</button>
+      <button type="button" (click)="carregar()" [disabled]="carregando()">Recarregar</button>
+    </div>
   </header>
 
   <div class="filtros">

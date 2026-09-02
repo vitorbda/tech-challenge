@@ -5,5 +5,13 @@
 <main>
   <app-planos-lista />
 
-  <app-beneficiarios-lista />
+  @if (modo() === 'lista') {
+    <app-beneficiarios-lista (novo)="abrirCadastro()" (editar)="abrirEdicao($event)" />
+  } @else {
+    <app-beneficiario-formulario
+      [id]="emEdicao()"
+      (salvo)="voltarParaLista()"
+      (cancelado)="voltarParaLista()"
+    />
+  }
 </main>

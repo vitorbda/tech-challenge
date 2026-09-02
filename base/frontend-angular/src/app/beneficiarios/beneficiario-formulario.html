@@ -1,0 +1,108 @@
+<section class="cartao">
+  <header class="cabecalho">
+    <h2>{{ edicao() ? 'Editar beneficiário' : 'Novo beneficiário' }}</h2>
+    <button type="button" (click)="cancelado.emit()">Voltar</button>
+  </header>
+
+  @if (carregando()) {
+    <p class="aviso">Carregando beneficiário...</p>
+  } @else {
+    @if (erro()) {
+      <p class="aviso erro">{{ erro() }}</p>
+    }
+
+    @if (precisaReativar()) {
+      <p class="aviso atencao">
+        Este beneficiário está inativo e é um registro congelado. Mude a situação para Ativo
+        para conseguir salvar alterações nos dados cadastrais.
+      </p>
+    }
+
+    <form [formGroup]="formulario" (ngSubmit)="enviar()">
+      <label>
+        Nome completo
+        <input type="text" formControlName="nome_completo" maxlength="120" />
+        @let nome = formulario.controls.nome_completo;
+        @if (nome.touched && nome.invalid) {
+          <small class="erro">
+            @if (nome.hasError('required')) {
+              Informe o nome completo.
+            } @else {
+              O nome precisa ter de 3 a 120 caracteres.
+            }
+          </small>
+        }
+      </label>
+
+      <label>
+        CPF
+        <input
+          type="text"
+          formControlName="cpf"
+          maxlength="11"
+          inputmode="numeric"
+          placeholder="Somente números"
+          [readonly]="edicao()"
+        />
+        @let cpf = formulario.controls.cpf;
+        @if (edicao()) {
+          <small class="dica">O CPF não pode ser alterado.</small>
+        } @else if (cpf.touched && cpf.invalid) {
+          <small class="erro">
+            @if (cpf.hasError('required')) {
+              Informe o CPF.
+            } @else {
+              CPF inválido. Use 11 dígitos, sem pontuação.
+            }
+          </small>
+        }
+      </label>
+
+      <label>
+        Data de nascimento
+        <input type="date" formControlName="data_nascimento" [max]="maximoDeNascimento" />
+        @let nascimento = formulario.controls.data_nascimento;
+        @if (nascimento.touched && nascimento.invalid) {
+          <small class="erro">
+            @if (nascimento.hasError('required')) {
+              Informe a data de nascimento.
+            } @else {
+              A data de nascimento precisa ser anterior a hoje.
+            }
+          </small>
+        }
+      </label>
+
+      <label>
+        Plano
+        <select formControlName="plano_id">
+          <option value="">Selecione um plano</option>
+          @for (plano of planos(); track plano.id) {
+            <option [value]="plano.id">{{ plano.nome }}</option>
+          }
+        </select>
+        @let plano = formulario.controls.plano_id;
+        @if (plano.touched && plano.invalid) {
+          <small class="erro">Selecione um plano.</small>
+        }
+      </label>
+
+      @if (edicao()) {
+        <label>
+          Situação
+          <select formControlName="status">
+            <option value="ATIVO">Ativo</option>
+            <option value="INATIVO">Inativo</option>
+          </select>
+        </label>
+      }
+
+      <footer class="acoes">
+        <button type="submit" [disabled]="formulario.invalid || enviando()">
+          {{ enviando() ? 'Salvando...' : 'Salvar' }}
+        </button>
+        <button type="button" (click)="cancelado.emit()" [disabled]="enviando()">Cancelar</button>
+      </footer>
+    </form>
+  }
+</section>

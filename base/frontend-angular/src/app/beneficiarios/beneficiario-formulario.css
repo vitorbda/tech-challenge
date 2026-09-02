@@ -1,0 +1,101 @@
+.cartao {
+  background: #fff;
+  border: 1px solid #dcdfe4;
+  border-radius: 8px;
+  padding: 1.25rem 1.5rem;
+}
+
+.cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.cabecalho h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+form {
+  display: grid;
+  gap: 1rem;
+  max-width: 32rem;
+}
+
+label {
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6b7280;
+}
+
+input,
+select {
+  border: 1px solid #c3c8d0;
+  background: #fff;
+  border-radius: 6px;
+  padding: 0.45rem 0.5rem;
+  font: inherit;
+  color: #111827;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+input[readonly] {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+button {
+  border: 1px solid #c3c8d0;
+  background: #f6f7f9;
+  border-radius: 6px;
+  padding: 0.4rem 0.9rem;
+  cursor: pointer;
+  font: inherit;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.acoes {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.aviso {
+  margin: 0 0 1rem;
+  color: #6b7280;
+}
+
+.aviso.erro {
+  color: #b42318;
+}
+
+.aviso.atencao {
+  color: #93370d;
+  background: #fffaeb;
+  border: 1px solid #fedf89;
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+}
+
+small {
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 0.8rem;
+}
+
+small.erro {
+  color: #b42318;
+}
+
+small.dica {
+  color: #6b7280;
+}
