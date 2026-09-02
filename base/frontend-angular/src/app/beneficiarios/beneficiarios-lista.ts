@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, output, signal } from '@angular/core';
+import { Component, computed, inject, output, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, switchMap } from 'rxjs';
 
@@ -36,6 +36,19 @@ export class BeneficiariosLista {
   /** Alimenta o select de filtro por plano. Carregado uma vez, não a cada filtro. */
   protected readonly planos = signal<Plano[]>([]);
 
+  // Distingue "os planos ainda não chegaram" de "este plano não existe mais". Sem isso, a
+  // primeira renderização mostraria o texto de plano excluído em todas as linhas.
+  private readonly planosCarregados = signal(false);
+
+  /** Falha ao carregar os planos não derruba a tabela: só os nomes ficam sem resolver. */
+  protected readonly erroDePlanos = signal<string | null>(null);
+
+  // Cruzar por id em vez de procurar no array a cada linha, que seria o mesmo N+1 do
+  // backend, agora no navegador.
+  private readonly nomesPorPlano = computed(
+    () => new Map(this.planos().map((plano) => [plano.id, plano.nome]))
+  );
+
   protected readonly tamanho = TAMANHO_DA_PAGINA;
 
   // Cada mudança de filtro empurra os filtros aqui. O switchMap cancela a requisição
@@ -64,8 +77,11 @@ export class BeneficiariosLista {
       .listar()
       .pipe(takeUntilDestroyed())
       .subscribe({
-        next: (planos) => this.planos.set(planos),
-        error: (resposta: HttpErrorResponse) => this.erro.set(mensagemDeErro(resposta))
+        next: (planos) => {
+          this.planos.set(planos);
+          this.planosCarregados.set(true);
+        },
+        error: (resposta: HttpErrorResponse) => this.erroDePlanos.set(mensagemDeErro(resposta))
       });
 
     this.carregar();
@@ -74,6 +90,18 @@ export class BeneficiariosLista {
   /** Última página com resultado. Sempre pelo menos 1, para não sumir a paginação. */
   protected ultimaPagina(): number {
     return Math.max(1, Math.ceil(this.total() / this.tamanho));
+  }
+
+  /**
+   * Nome do plano do beneficiário. `GET /planos` não devolve plano excluído, mas o
+   * beneficiário continua vinculado a ele, então a chave pode faltar.
+   */
+  protected nomeDoPlano(planoId: string): string {
+    if (!this.planosCarregados()) {
+      return '—';
+    }
+
+    return this.nomesPorPlano().get(planoId) ?? 'Plano descontinuado';
   }
 
   protected temFiltro(): boolean {
