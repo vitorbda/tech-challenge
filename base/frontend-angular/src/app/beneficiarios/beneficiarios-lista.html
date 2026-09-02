@@ -1,0 +1,83 @@
+<section class="cartao">
+  <header class="cabecalho">
+    <h2>Beneficiários</h2>
+    <button type="button" (click)="carregar()" [disabled]="carregando()">Recarregar</button>
+  </header>
+
+  <div class="filtros">
+    <label>
+      Situação
+      <select #seletorStatus [value]="status() ?? ''" (change)="mudarStatus(seletorStatus.value)">
+        <option value="">Todas</option>
+        <option value="ATIVO">Ativo</option>
+        <option value="INATIVO">Inativo</option>
+      </select>
+    </label>
+
+    <label>
+      Plano
+      <select #seletorPlano [value]="planoId() ?? ''" (change)="mudarPlano(seletorPlano.value)">
+        <option value="">Todos</option>
+        @for (plano of planos(); track plano.id) {
+          <option [value]="plano.id">{{ plano.nome }}</option>
+        }
+      </select>
+    </label>
+  </div>
+
+  @if (carregando()) {
+    <p class="aviso">Carregando beneficiários...</p>
+  } @else if (erro()) {
+    <p class="aviso erro">{{ erro() }}</p>
+  } @else if (beneficiarios().length === 0) {
+    @if (temFiltro()) {
+      <p class="aviso">Nenhum beneficiário encontrado para este filtro.</p>
+    } @else {
+      <p class="aviso">Nenhum beneficiário cadastrado.</p>
+    }
+  } @else {
+    <table>
+      <thead>
+        <tr>
+          <th>Nome completo</th>
+          <th>CPF</th>
+          <th>Nascimento</th>
+          <th>Situação</th>
+          <th>Plano</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (beneficiario of beneficiarios(); track beneficiario.id) {
+          <tr>
+            <td>{{ beneficiario.nome_completo }}</td>
+            <td>{{ beneficiario.cpf }}</td>
+            <td>{{ beneficiario.data_nascimento }}</td>
+            <td>{{ beneficiario.status }}</td>
+            <td>{{ beneficiario.plano_id }}</td>
+            <td class="acoes">
+              <button type="button" (click)="editar.emit(beneficiario)">Editar</button>
+              <button type="button" (click)="excluir.emit(beneficiario)">Excluir</button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    <footer class="paginacao">
+      <button type="button" (click)="irPara(pagina() - 1)" [disabled]="pagina() <= 1">
+        Anterior
+      </button>
+      <span class="aviso">
+        Página {{ pagina() }} de {{ ultimaPagina() }} — {{ total() }} beneficiário(s)
+      </span>
+      <button
+        type="button"
+        (click)="irPara(pagina() + 1)"
+        [disabled]="pagina() >= ultimaPagina()"
+      >
+        Próxima
+      </button>
+    </footer>
+  }
+</section>
