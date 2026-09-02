@@ -27,8 +27,8 @@
       </select>
     </label>
   </div>
-
-  @if (erroDePlanos()) {
+  
+  @if (erroDePlanos() && !erro()) {
     <p class="aviso erro">{{ erroDePlanos() }}</p>
   }
 
