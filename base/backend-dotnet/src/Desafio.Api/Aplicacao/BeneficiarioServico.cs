@@ -63,8 +63,6 @@ public class BeneficiarioServico(AppDbContext db)
         var beneficiario = new Beneficiario(dados.NomeCompleto, dados.Cpf, dados.DataNascimento, dados.PlanoId);
 
         await GarantirPlanoExisteAsync(beneficiario.PlanoId, cancellationToken);
-        await GarantirCpfDisponivelAsync(beneficiario.Cpf, cancellationToken);
-
         db.Beneficiarios.Add(beneficiario);
         await SalvarAsync(cancellationToken);
 
@@ -107,21 +105,6 @@ public class BeneficiarioServico(AppDbContext db)
             throw new NaoProcessavelException(
                 "Plano informado não existe",
                 [new DetalheErro("plano_id", "nao_encontrado")]);
-        }
-    }
-
-    private async Task GarantirCpfDisponivelAsync(string cpf, CancellationToken cancellationToken)
-    {
-        var emUso = await db.Beneficiarios
-            .IgnoreQueryFilters()
-            .AsNoTracking()
-            .AnyAsync(b => b.Cpf == cpf, cancellationToken);
-
-        if (emUso)
-        {
-            throw new ConflitoException(
-                "Já existe beneficiário cadastrado com esse CPF",
-                [new DetalheErro("cpf", "duplicado")]);
         }
     }
 
