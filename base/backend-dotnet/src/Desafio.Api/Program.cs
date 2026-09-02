@@ -1,3 +1,5 @@
+using System.Text.Json;
+using System.Threading.RateLimiting;
 using Desafio.Api.Api.Contratos;
 using Desafio.Api.Api.Middlewares;
 using Desafio.Api.Aplicacao;
@@ -48,11 +50,44 @@ builder.Services.Configure<ApiBehaviorOptions>(opcoes =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+const int limitePorSegundo = 200;
+builder.Services.AddRateLimiter(opcoes =>
+{
+    opcoes.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    opcoes.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(contexto =>
+    {
+        var chaveDoCliente = contexto.Connection.RemoteIpAddress?.ToString() ?? "desconhecido";
+
+        return RateLimitPartition.GetFixedWindowLimiter(chaveDoCliente, _ => new FixedWindowRateLimiterOptions
+        {
+            PermitLimit = limitePorSegundo,
+            Window = TimeSpan.FromSeconds(1),
+            QueueLimit = 0
+        });
+    });
+
+    opcoes.OnRejected = async (contexto, cancellationToken) =>
+    {
+        contexto.HttpContext.Response.ContentType = "application/json; charset=utf-8";
+
+        var resposta = new ErroResponse(
+            "LimiteDeRequisicoesExcedido",
+            "Muitas requisições em pouco tempo. Tente novamente em instantes.",
+            []);
+
+        await contexto.HttpContext.Response.WriteAsync(
+            JsonSerializer.Serialize(resposta, JsonPadrao.Opcoes), cancellationToken);
+    };
+});
+
 var app = builder.Build();
 
 app.UseMiddleware<TratamentoDeErroMiddleware>();
 
 app.UseCors(PoliticaDaWeb);
+
+app.UseRateLimiter();
 
 app.UseSwagger();
 app.UseSwaggerUI(opcoes => opcoes.RoutePrefix = "swagger");
