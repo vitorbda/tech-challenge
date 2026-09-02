@@ -28,6 +28,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             entidade.Property(b => b.Cpf).HasMaxLength(11).IsRequired();
             entidade.Property(b => b.Status).HasConversion<string>().HasMaxLength(10).IsRequired();
             entidade.HasIndex(b => b.Cpf).IsUnique();
+            entidade.HasIndex(b => new { b.NomeCompleto, b.Id });
+            entidade.HasIndex(b => b.Status);
             entidade.HasOne(b => b.Plano)
                 .WithMany()
                 .HasForeignKey(b => b.PlanoId)
