@@ -10,7 +10,7 @@ services:
     ports:
       - "9999:8080"
     environment:
-      ConnectionStrings__Postgres: "Host=postgres;Port=5432;Database=desafio;Username=desafio;Password=desafio"
+      ConnectionStrings__Postgres: "Host=postgres;Port=5432;Database=desafio;Username=desafio;Password=desafio;Maximum Pool Size=50;Timeout=15;Command Timeout=30"
     depends_on:
       postgres:
         condition: service_healthy
