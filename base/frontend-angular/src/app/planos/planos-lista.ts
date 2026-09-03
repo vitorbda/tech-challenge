@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, signal } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { mensagemDeErro } from '../nucleo/api';
@@ -13,6 +13,7 @@ import { PlanoServico } from './plano-servico';
 })
 export class PlanosLista {
   private readonly servico = inject(PlanoServico);
+  private readonly destroyRef = inject(DestroyRef);
 
   protected readonly planos = signal<Plano[]>([]);
   protected readonly carregando = signal(true);
@@ -26,11 +27,12 @@ export class PlanosLista {
     this.carregando.set(true);
     this.erro.set(null);
 
-    // takeUntilDestroyed cancela a inscrição quando o componente sai da tela.
-    // Sem isso, navegar entre rotas vaza subscription.
+    // takeUntilDestroyed cancela a inscrição quando o componente sai da tela, senão a
+    // resposta chega para um componente que já morreu. O DestroyRef vai explícito porque
+    // carregar() também é chamado pelo botão Recarregar, fora do contexto de injeção.
     this.servico
       .listar()
-      .pipe(takeUntilDestroyed())
+      .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (planos) => {
           this.planos.set(planos);
