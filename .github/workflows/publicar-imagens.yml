@@ -1,0 +1,59 @@
+name: Publicar imagens
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Branch com o codigo da entrega
+        required: true
+        default: entrega/joao-andrade
+      tag:
+        description: Tag das imagens
+        required: true
+        default: 1.0.0
+
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Construir e publicar a API
+        uses: docker/build-push-action@v6
+        with:
+          context: ./base/backend-dotnet
+          platforms: linux/amd64
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/desafio-4tech-api:${{ inputs.tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Construir e publicar a interface web
+        uses: docker/build-push-action@v6
+        with:
+          context: ./base/frontend-angular
+          platforms: linux/amd64
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/desafio-4tech-web:${{ inputs.tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  verificar:
+    needs: publicar
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+
+      - name: Rodar o verificador contra a entrega
+        run: ./verificar.sh participantes/joao-andrade
