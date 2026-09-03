@@ -1,0 +1,12 @@
+{
+  "identificador": "joao-andrade",
+  "nome": "João Vitor Batista de Andrade",
+  "email": "bdandrade.joaovitor@gmail.com",
+  "imagem_api": "vitorbda/desafio-4tech-api:1.0.0",
+  "imagem_web": "vitorbda/desafio-4tech-web:1.0.0",
+  "stack": [
+    "dotnet-10",
+    "postgres-17",
+    "angular-20"
+  ]
+}

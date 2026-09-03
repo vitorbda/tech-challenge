@@ -1,0 +1,38 @@
+# Sobe a entrega completa: API, banco e interface web.
+#
+#   docker compose up -d
+#
+# A API responde em http://localhost:9999 e a interface web em http://localhost:4200.
+# O schema e a carga inicial são criados pela própria API na subida.
+
+services:
+  api:
+    image: vitorbda/desafio-4tech-api:1.0.0
+    ports:
+      - "9999:8080"
+    environment:
+      ConnectionStrings__Postgres: "Host=postgres;Port=5432;Database=desafio;Username=desafio;Password=desafio;Maximum Pool Size=50;Timeout=15;Command Timeout=30"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+  web:
+    image: vitorbda/desafio-4tech-web:1.0.0
+    ports:
+      - "4200:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: desafio
+      POSTGRES_USER: desafio
+      POSTGRES_PASSWORD: desafio
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U desafio -d desafio"]
+      interval: 3s
+      timeout: 3s
+      retries: 15
