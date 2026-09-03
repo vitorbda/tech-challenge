@@ -63,7 +63,7 @@
           <tr>
             <td>{{ beneficiario.nome_completo }}</td>
             <td>{{ beneficiario.cpf }}</td>
-            <td>{{ beneficiario.data_nascimento }}</td>
+            <td>{{ dataFormatada(beneficiario.data_nascimento) }}</td>
             <td>{{ beneficiario.status }}</td>
             <td [title]="beneficiario.plano_id">{{ nomeDoPlano(beneficiario.plano_id) }}</td>
             <td class="acoes">

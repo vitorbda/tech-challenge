@@ -116,6 +116,12 @@ export class BeneficiariosLista {
     return this.nomesPorPlano().get(planoId) ?? 'Plano descontinuado';
   }
 
+  protected dataFormatada(data: string): string {
+    const [ano, mes, dia] = data.split('-');
+
+    return `${dia}/${mes}/${ano}`;
+  }
+
   protected temFiltro(): boolean {
     return this.status() !== null || this.planoId() !== null;
   }
