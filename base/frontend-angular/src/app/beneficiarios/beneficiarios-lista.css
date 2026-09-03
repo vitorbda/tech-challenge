@@ -89,6 +89,22 @@ th {
   margin-top: 1rem;
 }
 
+.posicao {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.seletor-de-pagina {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6b7280;
+}
+
 .aviso {
   margin: 0;
   color: #6b7280;

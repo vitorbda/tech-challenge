@@ -26,6 +26,15 @@
         }
       </select>
     </label>
+
+    <label>
+      Itens por página
+      <select #seletorTamanho (change)="mudarTamanho(seletorTamanho.value)">
+        @for (opcao of tamanhosDePagina; track opcao) {
+          <option [value]="opcao" [selected]="opcao === tamanho()">{{ opcao }}</option>
+        }
+      </select>
+    </label>
   </div>
   
   @if (erroDePlanos() && !erro()) {

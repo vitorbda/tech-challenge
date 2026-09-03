@@ -12,6 +12,9 @@ import { BeneficiarioServico, FiltrosBeneficiario } from './beneficiario-servico
 /** Quantidade de itens por página. Enviada sempre, para não depender do padrão da API. */
 const TAMANHO_DA_PAGINA = 10;
 
+/** Opções do seletor. A SPEC limita `tamanho` a 100, então 100 é o teto. */
+const TAMANHOS_DE_PAGINA = [10, 25, 50, 100];
+
 @Component({
   selector: 'app-beneficiarios-lista',
   templateUrl: './beneficiarios-lista.html',
@@ -57,7 +60,8 @@ export class BeneficiariosLista {
     () => new Map(this.planos().map((plano) => [plano.id, plano.nome]))
   );
 
-  protected readonly tamanho = TAMANHO_DA_PAGINA;
+  protected readonly tamanho = signal(TAMANHO_DA_PAGINA);
+  protected readonly tamanhosDePagina = TAMANHOS_DE_PAGINA;
 
   // Cada mudança de filtro empurra os filtros aqui. O switchMap cancela a requisição
   // anterior, senão a resposta lenta de um filtro antigo sobrescreve a do filtro atual.
@@ -101,7 +105,7 @@ export class BeneficiariosLista {
 
   /** Última página com resultado. Sempre pelo menos 1, para não sumir a paginação. */
   protected ultimaPagina(): number {
-    return Math.max(1, Math.ceil(this.total() / this.tamanho));
+    return Math.max(1, Math.ceil(this.total() / this.tamanho()));
   }
 
   /**
@@ -133,7 +137,7 @@ export class BeneficiariosLista {
 
     this.filtros.next({
       pagina: this.pagina(),
-      tamanho: this.tamanho,
+      tamanho: this.tamanho(),
       status: this.status(),
       planoId: this.planoId()
     });
@@ -146,6 +150,13 @@ export class BeneficiariosLista {
 
   protected mudarPlano(valor: string): void {
     this.planoId.set(valor || null);
+    this.aplicarFiltro();
+  }
+
+  // Trocar a quantidade por página muda quantas páginas existem: a página atual pode deixar
+  // de existir. Voltar para a primeira é o mesmo tratamento dado à troca de filtro.
+  protected mudarTamanho(valor: string): void {
+    this.tamanho.set(Number(valor));
     this.aplicarFiltro();
   }
 
