@@ -153,6 +153,11 @@ export class BeneficiariosLista {
     this.aplicarFiltro();
   }
 
+  /** Páginas existentes, para o seletor de página. */
+  protected paginas(): number[] {
+    return Array.from({ length: this.ultimaPagina() }, (_, indice) => indice + 1);
+  }
+
   // Trocar a quantidade por página muda quantas páginas existem: a página atual pode deixar
   // de existir. Voltar para a primeira é o mesmo tratamento dado à troca de filtro.
   protected mudarTamanho(valor: string): void {

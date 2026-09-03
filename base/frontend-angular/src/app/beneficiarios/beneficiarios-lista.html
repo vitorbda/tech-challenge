@@ -88,9 +88,20 @@
       <button type="button" (click)="irPara(pagina() - 1)" [disabled]="pagina() <= 1">
         Anterior
       </button>
-      <span class="aviso">
-        Página {{ pagina() }} de {{ ultimaPagina() }} — {{ total() }} beneficiário(s)
-      </span>
+      <div class="posicao">
+        <label class="seletor-de-pagina">
+          Página
+          <select #seletorPagina (change)="irPara(+seletorPagina.value)">
+            @for (numero of paginas(); track numero) {
+              <option [value]="numero" [selected]="numero === pagina()">{{ numero }}</option>
+            }
+          </select>
+        </label>
+        <span class="aviso">
+          de {{ ultimaPagina() }} — mostrando {{ beneficiarios().length }}
+          de {{ total() }} beneficiário(s)
+        </span>
+      </div>
       <button
         type="button"
         (click)="irPara(pagina() + 1)"
