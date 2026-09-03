@@ -142,6 +142,28 @@ export class BeneficiariosLista {
 
   // Filtrar volta para a primeira página. Sem isso, filtrar estando na página 3 deixaria a
   // tela vazia sempre que o novo conjunto tivesse menos páginas que a atual.
+  /**
+   * A tela reflete o estado real do servidor: nada de remover o item da lista antes da
+   * resposta. Se o DELETE falhar, o beneficiário continua onde estava e o usuário é avisado.
+   */
+  protected excluir(beneficiario: Beneficiario): void {
+    if (!confirm(`Excluir o beneficiário ${beneficiario.nome_completo}?`)) {
+      return;
+    }
+
+    this.erroDeAcao.set(null);
+
+    this.servico
+      .excluir(beneficiario.id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        // Recarregar em vez de tirar do array local: o total muda e a página atual pode ter
+        // ficado vazia.
+        next: () => this.carregar(),
+        error: (resposta: HttpErrorResponse) => this.erroDeAcao.set(mensagemDeErro(resposta))
+      });
+  }
+
   private aplicarFiltro(): void {
     this.pagina.set(1);
     this.carregar();

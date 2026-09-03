@@ -32,6 +32,10 @@
     <p class="aviso erro">{{ erroDePlanos() }}</p>
   }
 
+  @if (erroDeAcao()) {
+    <p class="aviso erro">{{ erroDeAcao() }}</p>
+  }
+
   @if (carregando()) {
     <p class="aviso">Carregando beneficiários...</p>
   } @else if (erro()) {
@@ -64,7 +68,7 @@
             <td [title]="beneficiario.plano_id">{{ nomeDoPlano(beneficiario.plano_id) }}</td>
             <td class="acoes">
               <button type="button" (click)="editar.emit(beneficiario)">Editar</button>
-              <button type="button" (click)="excluir.emit(beneficiario)">Excluir</button>
+              <button type="button" (click)="excluir(beneficiario)">Excluir</button>
             </td>
           </tr>
         }
