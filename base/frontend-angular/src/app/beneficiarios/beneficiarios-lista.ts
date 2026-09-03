@@ -1,5 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, computed, inject, output, signal } from '@angular/core';
+import { Component, DestroyRef, computed, inject, output, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subject, switchMap } from 'rxjs';
 
@@ -20,15 +20,22 @@ const TAMANHO_DA_PAGINA = 10;
 export class BeneficiariosLista {
   private readonly servico = inject(BeneficiarioServico);
   private readonly planoServico = inject(PlanoServico);
+  // takeUntilDestroyed sem argumento só funciona em contexto de injeção. A exclusão parte de
+  // um clique, fora do construtor, e por isso precisa do DestroyRef explícito.
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly novo = output<void>();
   readonly editar = output<Beneficiario>();
-  readonly excluir = output<Beneficiario>();
 
   protected readonly beneficiarios = signal<Beneficiario[]>([]);
   protected readonly total = signal(0);
   protected readonly carregando = signal(true);
+  /** Falha ao carregar a listagem: legitimamente substitui a tabela, não há o que mostrar. */
   protected readonly erro = signal<string | null>(null);
+
+  // Falha de uma ação sobre um item já listado. Vai para um signal próprio porque a tabela
+  // precisa continuar na tela: a SPEC exige que o item permaneça quando o DELETE falha.
+  protected readonly erroDeAcao = signal<string | null>(null);
 
   protected readonly pagina = signal(1);
   protected readonly status = signal<StatusBeneficiario | null>(null);
@@ -67,6 +74,10 @@ export class BeneficiariosLista {
           this.beneficiarios.set(pagina.dados);
           this.total.set(pagina.total);
           this.carregando.set(false);
+
+          if (pagina.dados.length === 0 && this.pagina() > 1) {
+            this.irPara(this.pagina() - 1);
+          }
         },
         error: (resposta: HttpErrorResponse) => {
           this.erro.set(mensagemDeErro(resposta));
@@ -112,6 +123,7 @@ export class BeneficiariosLista {
   protected carregar(): void {
     this.carregando.set(true);
     this.erro.set(null);
+    this.erroDeAcao.set(null);
 
     this.filtros.next({
       pagina: this.pagina(),
